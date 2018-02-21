@@ -1,0 +1,235 @@
+package com.buzzybrains.restassured;
+
+import static io.restassured.RestAssured.get;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.path.json.JsonPath.from;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+
+import java.net.MalformedURLException;
+import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
+import io.restassured.specification.RequestSpecification;
+public class Post {
+
+	
+	
+	@Test
+	public void RegistrationSuccessful() throws JSONException
+	{		
+		RestAssured.baseURI ="http://restapi.demoqa.com/customer";
+		RequestSpecification request = RestAssured.given();
+
+		JSONObject requestParams = new JSONObject();
+		requestParams.put("FirstName", "Virender"); // Cast
+		requestParams.put("LastName", "Singh");
+		requestParams.put("UserName", "sdimpleuser2dd2011");
+		requestParams.put("Password", "password1");
+
+		requestParams.put("Email",  "sample2ee26d9@gmail.com");
+		request.body(requestParams.toString());
+		Response response = request.post("/register");
+
+		int statusCode = response.getStatusCode();
+		Assert.assertEquals(statusCode,200);
+		String successCode = response.jsonPath().get("SuccessCode");
+		
+	//  System.out.println(successCode);
+		
+		//Assert.assertEquals( "Correct Success code was returned", successCode, "OPERATION_SUCCESS");
+	}
+	
+	
+	
+
+	
+
+	@Test
+	public void AVerifyCityInJsonResponse()
+	{
+		RestAssured.baseURI = "http://restapi.demoqa.com/utilities/weather/city";
+		RequestSpecification httpRequest = RestAssured.given();
+		Response response = httpRequest.get("/Hyderabad");
+
+		// First get the JsonPath object instance from the Response interface
+		JsonPath jsonPathEvaluator = response.jsonPath();
+
+		// Then simply query the JsonPath object to get a String value of the node
+		// specified by JsonPath: City (Note: You should not put $. in the Java code)
+		String city = jsonPathEvaluator.get("City");
+
+		// Let us print the city variable to see what we got
+		System.out.println("City received from Response " + city);
+
+		// Validate the response
+		Assert.assertEquals(city, "Hyderabad", "Correct city name received in the Respone");
+
+	}
+
+
+	@Test
+	public void DisplayAllNodesInWeatherAPI()
+	{
+		RestAssured.baseURI = "http://restapi.demoqa.com/utilities/weather/city";
+		RequestSpecification httpRequest = RestAssured.given();
+		Response response = httpRequest.get("/Hyderabad");
+
+		// First get the JsonPath object instance from the Response interface
+		JsonPath jsonPathEvaluator = response.jsonPath();
+
+		// Let us print the city variable to see what we got
+	//	System.out.println("City received from Response " + jsonPathEvaluator.get("City"));
+
+		// Print the temperature node
+		System.out.println("Temperature received from Response " + jsonPathEvaluator.get("Temperature"));
+
+		// Print the humidity node
+		System.out.println("Humidity received from Response " + jsonPathEvaluator.get("Humidity"));
+
+		// Print weather description
+		System.out.println("Weather description received from Response " + jsonPathEvaluator.get("Weather"));
+
+		// Print Wind Speed
+	//	System.out.println("City received from Response " + jsonPathEvaluator.get("WindSpeed"));
+
+		// Print Wind Direction Degree
+	//	System.out.println("City received from Response " + jsonPathEvaluator.get("WindDirectionDegree"));
+	}
+
+
+	@Test
+	public void WeatherMessageBody()
+	{
+		RestAssured.baseURI = "http://restapi.demoqa.com/utilities/weather/city";
+		RequestSpecification httpRequest = RestAssured.given();
+		Response response = httpRequest.get("/Hyderabad");
+
+		// Retrieve the body of the Response
+		ResponseBody body = response.getBody();
+
+		// To check for sub string presence get the Response body as a String.
+		// Do a String.contains
+		String bodyAsString = body.asString();
+
+		// convert the body into lower case and then do a comparison to ignore casing.
+		Assert.assertEquals(bodyAsString.toLowerCase().contains("hyderabad"),"hyderabad");
+	}
+
+
+	@Test
+	public void JsonPathUsage() throws MalformedURLException
+	{
+		RestAssured.baseURI = "http://restapi.demoqa.com/utilities/books/getallbooks";
+		RequestSpecification httpRequest = RestAssured.given();
+		Response response = httpRequest.get("");
+
+		// First get the JsonPath object instance from the Response interface
+		JsonPath jsonPathEvaluator = response.jsonPath();
+
+		// Read all the books as a List of String. Each item in the list
+		// represent a book node in the REST service Response
+		List<String> allBooks = jsonPathEvaluator.getList("books.title");
+
+		// Iterate over the list and print individual book item
+		for(String book : allBooks)
+		{
+			System.out.println("Book: " + book);
+		}
+	}
+@Test
+public void testStatusCode() {
+	
+	given().get("http://jsonplaceholder.typicode.com/posts/3").then().statusCode(200);
+	
+}
+
+@Test
+public void testLogging() {
+	
+	given().get("http://services.groupkt.com/country/get/iso2code/in").then().statusCode(200).log().all();
+	
+}
+
+
+@Test
+public void testEqualToFun() {
+	
+	given().get("http://services.groupkt.com/country/get/iso2code/us").then().body("RestResponse.result.name",equalTo("United States of America"));
+	
+}
+
+@Test
+public void testParamsAndHeaders() {
+	
+	given().
+	param("key1", "value1").
+	header("headA","valueA").
+	when().
+	get("http://services.groupkt.com/country/get/iso2code/gb").
+	then().
+	statusCode(200).
+	log().all();
+	
+}
+
+
+@Test
+public void testHasItemsFun() {
+	
+	given().get("http://services.groupkt.com/country/get/all").then().body("RestResponse.result.name",hasItems("Afghanistan","Argentina"));
+	
+}
+
+@Test
+public void testHasItemsFun2() {
+	
+	given().param("key1", "value1").
+	header("headA","valueA").
+	when().get("http://services.groupkt.com/country/get/iso2code/cn").then().statusCode(200).and().body("RestResponse.result.alpha3_code",equalTo("CHN"));
+	
+}
+
+@Test
+public void test4() {
+	
+String href =given().get("http://jsonplaceholder.typicode.com/photos/1").then().contentType(ContentType.JSON).body("albumId", equalTo(1)).extract().path("url");
+
+when().get(href).then().statusCode(200);
+
+}
+
+
+@Test
+public void test3() {
+	
+ String res = get("http://services.groupkt.com/country/search?text=lands").asString();
+
+ List<String> ls = from(res).getList("Response.result.name");
+     
+             System.out.println(ls.size());
+ 
+             for (String country : ls) {
+				
+            	 if (country.equals("Soloman Islands")) {
+					System.out.println("Found my place");
+				}
+            	 
+			}
+             
+             
+}
+
+
+
+}
